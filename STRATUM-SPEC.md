@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Document | STRATUM system specification |
-| Version | 0.1 — draft |
+| Version | 0.1.1 — draft |
 | Date | 2026-10-28 |
 | Owner | CtxtArc |
 | Status | Phase 0 (specification) |
@@ -1261,13 +1261,35 @@ gantt
 | **P6** Field trials | 10 pucks + 2 bases, multi-site campaign | All M requirements verified |
 | **P7** SDR base v2 | Platform choice (O-004), first VHDL waveform, link test | STRATUM frames carried over the custom PHY |
 
-Phase 1 dev hardware: **B-U585I-IOT02A** (STM32U585 discovery kit) + an SX1262 868 MHz module wired over SPI **[VERIFY]** header compatibility, or a small adapter board.
+Phase 1 dev hardware: 3× **NUCLEO-U545RE-Q** + 3× **Waveshare Core1262-868M** (SX1262) wired over SPI, with 868 MHz antennas. Full list in [§16.0](#160-phase-1-development-kit-sourced-2026-10-28). Same STM32U5 family as the puck, so firmware ports directly.
 
 ---
 
 ## 16. Bill of materials (estimates)
 
-Prototype quantities (1–10 units), EUR, excluding VAT. **All prices are rough estimates [VERIFY]**.
+### 16.0 Phase 1 development kit (sourced 2026-10-28)
+
+Three dev-board nodes: two pucks plus one sniffer/logger (later the first relay for multi-hop tests). Prices as listed on 2026-10-28; shipping not included.
+
+| Item | Part / ref | Supplier | Qty | Unit | Total |
+|---|---|---|---|---|---|
+| MCU board | NUCLEO-U545RE-Q (Mouser `511-NUCLEO-U545RE-Q`) | [Mouser FR](https://www.mouser.fr/en/ProductDetail/STMicroelectronics/NUCLEO-U545RE-Q?qs=mELouGlnn3cp3Tn45zRmFA%3D%3D) | 3 | €22.52 excl. VAT (~€27 incl.) | ~€81 |
+| LoRa module | Waveshare Core1262-868M (SX1262, TCXO) | [RobotShop EU](https://eu.robotshop.com/fr/products/module-lora-core1262-868m-sx1262-anti-interference-bande-eu868) | 3 | €8 | €24 |
+| Antenna | 868 MHz ±3 MHz, 2 dBi, SMA male right-angle, VSWR ≤ 1.5 (RF Konnect MINI-ANT-868-ANGLE-881) | [Passion Radio](https://www.passion-radio.fr/868/868-angle-881.html) | 3 | €6.70 excl. VAT | ~€24 |
+| Pigtail | U.FL (IPEX-1/MHF1) female → SMA female, 10 cm (Getic P-UF-SF-10) | [Getic](https://www.getic.fr/product/pigtail-u-fl-female-sma-female-10cm) | 5 (2 spares) | €2.98 incl. VAT | ~€15 |
+| **Total** | | | | | **~€144 + shipping** |
+
+Notes for this kit:
+
+- **Core1262 driver init**: the TCXO is powered through DIO3 → send `SetDio3AsTcxoCtrl` (1.8 V reported by users [VERIFY] against the Waveshare schematic) before calibration; the RF switch is driven by DIO2 → `SetDio2AsRfSwitchCtrl(1)`.
+- Check the Core1262 **pin pitch** before wiring to the Nucleo Arduino headers; plan a small perfboard adapter if it is not 2.54 mm.
+- Pigtails must be **SMA**, not RP-SMA (center hole on the female connector). Fix the SMA end to the adapter board: the u.FL connector is rated for ~30 mating cycles and must not carry the antenna's weight.
+- **Never transmit without an antenna** at +22 dBm.
+- Keep antennas vertical and parallel during range tests (polarisation mismatch costs 10–20 dB).
+- Mouser ships free to France above €75 on most orders: check the basket; a 4th Nucleo can cost less than the shipping fee.
+- Recommended add-on: cheap 8-channel logic analyser (sigrok/PulseView) for SPI, BUSY and DIO1, ~€10–15.
+
+Later phases below are prototype quantities (1–10 units), EUR, excluding VAT. **All prices are rough estimates [VERIFY]**.
 
 ### 16.1 Puck rev A
 
@@ -1354,6 +1376,7 @@ SDR for spectrum and duty-cycle checks, RF shield box, step attenuators, RF powe
 | O-008 | Voice clips over LoRa | Codec2 1200 bps, P3 class / not supported | After P6 |
 | O-009 | Duty-cycled receive on the puck | Continuous RX (v1) / preamble sniffing with wake-up | After P2 |
 | O-010 | Tethered drone or aerostat relay | Not in scope / research add-on | After P6 |
+| O-011 | Puck MCU: keep STM32U585 or move to STM32U545 (cheaper, smaller) | U585 / U545 — check USB device, SAES/PKA, flash for 2 image slots + stack | P3 |
 
 ---
 
@@ -1469,3 +1492,4 @@ Datasheets and standards to download and keep with the project (the only externa
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-28 | First complete draft: architecture, RF, hardware, protocol, security, software, tests, roadmap |
+| 0.1.1 | 2026-10-28 | Phase 1 dev kit sourced and added to the BOM (§16.0); Phase 1 hardware changed to NUCLEO-U545RE-Q + Core1262-868M; added O-011 |
